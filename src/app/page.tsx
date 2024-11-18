@@ -6,6 +6,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
 import { ValueGetterParams } from "ag-grid-community";
+import { fetchData } from "@/action/fetchdata";
 
 type DataRow = {
   [key: string]: string | number; 
@@ -19,12 +20,10 @@ const DataTable: React.FC = () => {
   
   // Fetch data từ API
   useEffect(() => {
-    const fetchData = async () => {
+    const getData = async () => {
       try {
-        const response = await fetch("http://27.72.246.67:8710/api/data1");
-        if (!response.ok) throw new Error("Network response was not ok");
-        const result: DataRow[] = await response.json();
-        setData(result);
+        const data = await fetchData()
+        setData(data);
       } catch (err) {
         setError("Error fetching data");
         console.error("Error fetching data:", err);
@@ -33,7 +32,7 @@ const DataTable: React.FC = () => {
       }
     };
 
-    fetchData();
+    getData();
   }, []);
 
   const defaultColDef = useMemo(

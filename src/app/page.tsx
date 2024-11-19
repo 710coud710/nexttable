@@ -1,21 +1,25 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
-import { AgGridReact } from "ag-grid-react";
+import { AgGridReact} from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
-import { ValueGetterParams } from "ag-grid-community";
+import { ValueGetterParams, ColDef, IRowNode } from "ag-grid-community";
 import { fetchData } from "@/action/fetchdata";
 
-type DataRow = {
-  [key: string]: string | number; 
-};
+import { DataRow } from "./pagetype";
+
+// type DataRow = {
+//   [key: string]: string | number; 
+// };
 
 const DataTable: React.FC = () => {
   const [data, setData] = useState<DataRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterEnabled, setFilterEnabled] = useState<boolean>(false); 
+
 
   
   // Fetch data từ API
@@ -44,17 +48,16 @@ const DataTable: React.FC = () => {
     []
   );
 
-  const columnDefs = useMemo(
-    () => [
-      { headerName: "Year", field: "Year" },
-      { headerName: "Coin", field: "Coin" },
-      { headerName: "Container", field: "Container" },
-      { headerName: "Max", field: "Max", type: "numericColumn" },
-      { headerName: "Leverage", field: "Leverage", type: "numericColumn" },
-      { headerName: "Reserve", field: "Reserve", type: "numericColumn" },
+  const columnDefs: ColDef<DataRow>[] = [    //thieu eny ở sau datarow
+    { headerName: "Year", field: "Year", filter: "agSetColumnFilter" },
+      { headerName: "Coin", field: "Coin" ,  filter: "agSetColumnFilter"},
+      { headerName: "Container", field: "Container", filter: "agSetColumnFilter" },
+      { headerName: "Max", field: "Max"  },
+      { headerName: "Leverage", field: "Leverage" },
+      { headerName: "Reserve", field: "Reserve" },
       { headerName: "IR", field: "IR" },
       { headerName: "Account Name", field: "Account Name" },
-      { headerName: "Status", field: "Status" },
+      { headerName: "Status", field: "Status" , filter: "agSetColumnFilter"},
       {
         headerName: "Final Equity",
         field: "Final Equity",
@@ -144,24 +147,95 @@ const DataTable: React.FC = () => {
             }
         },
       },
-    
-    ],
-    []
-  );
+  ];
 
+  const isExternalFilterPresent = () => {
+    return filterEnabled; // Kích hoạt khi bộ lọc được bật
+  };
+
+  const doesExternalFilterPass = (node: IRowNode) => {
+    if (!filterEnabled) return true; // Nếu không bật bộ lọc, trả về tất cả
+
+    const finalEquity = node.data["Final Equity"];
+    const equityValue =
+      typeof finalEquity === "string"
+        ? parseFloat(finalEquity.replace(/[$,]/g, "")) || 0
+        : finalEquity || 0; // Tránh giá trị null/undefined
+
+    const maxUpnl = node.data["Max UPNL"];
+    const upnlValue =
+      typeof maxUpnl === "string"
+        ? parseFloat(maxUpnl.replace(/[%]/g, "").replace(/,/g, "")) / 100 || 0
+        : maxUpnl || 0; // Tránh giá trị null/undefined
+
+    return equityValue >= 120000 && upnlValue >= -0.30;
+  };
+
+
+
+  const toggleFilter = () => {
+    setFilterEnabled((prev) => !prev); 
+  };
+
+
+  // const toggleFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setFilterEnabled(event.target.checked); 
+  // };
+  
+  
   if (loading) return <p>Loading data...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <div className="container-fluid">
+      <div style={{ marginBottom: "1rem" }}>
+        <button onClick={toggleFilter}  style={{ fontSize:"15px" }}>
+          {filterEnabled
+            ? "Final Equity (>=120,000) & MAX UPNL(>=-30%) ✓"
+            : "Final Equity (>=120,000) & MAX UPNL(>=-30%) ✕ "
+            }
+        </button>
+      </div>
+      {/* <div style={{ marginBottom: "1rem" }}>
+        <label >
+         <a style={{ color: "black", marginRight: "8px", fontSize:"20px" }}>     Final Equity >= 120,000 & MAX UPNL >= -30% </a>
+            
+          <input
+            type="checkbox"
+            checked={filterEnabled}
+            onChange={toggleFilter}
+            
+          />
+          
+        </label>
+      </div> */}
+
       <div className="ag-theme-alpine" style={{ height: "100%", width: "100%" }}>
-        <AgGridReact
-          rowData={data}
+        <AgGridReact<DataRow>
+          // rowData={data}
+          // columnDefs={columnDefs}
+          // defaultColDef={defaultColDef}
+          // pagination={true}
+          // domLayout="autoHeight"
+          // rowSelection="single"
+          // isExternalFilterPresent={isExternalFilterPresent}
+          // doesExternalFilterPass={doesExternalFilterPass}
+          // onFilterChanged={() => {
+          //   console.log("External filter changed");
+          // }}
+       
           columnDefs={columnDefs}
+          rowData={data}
           defaultColDef={defaultColDef}
+          enableRangeSelection={true}
+          enableCharts={true}
           pagination={true}
+          paginationPageSize={20}
           domLayout="autoHeight"
-          rowSelection="single"
+          cacheBlockSize={20}
+          rowSelection="multiple"
+          isExternalFilterPresent={isExternalFilterPresent}
+          doesExternalFilterPass={doesExternalFilterPass}
         />
       </div>
     </div>

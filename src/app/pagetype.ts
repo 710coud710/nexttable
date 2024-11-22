@@ -1,4 +1,6 @@
 export interface DataRow  {
+    upnl: number;
+    equity: number;
     "_id": string;
     "5%": number;
     "10%": number;
@@ -30,7 +32,7 @@ export interface DataRow  {
     "IR": string;
     "Leverage": number;
     "Max": number;
-    "Max UPNL": string;
+    "Max UPNL": number;
     "Median Gain": number;
     "R:R": string | number;
     "Reserve": number;

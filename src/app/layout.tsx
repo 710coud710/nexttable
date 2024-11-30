@@ -1,34 +1,32 @@
-// src/app/layout.tsx
+// app/layout.tsx
+'use client';
+
+import React, { useState } from 'react';
 import '../styles/globals.css';
+import Sidebar from '@/components/sidebar';
 
-interface RootLayoutProps {
-  children: React.ReactNode;
-}
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-export default function RootLayout({ children }: RootLayoutProps) {
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <html lang="en">
       <body>
-        <header style={headerStyle}>
-          
-          <nav>
-            {/* <a href="/">Home</a> | <a href="/about">About</a> | <a href="/dashboard">Dashboard</a> */}
-            <h3>web</h3>
-          </nav>
-        </header>
-        <main >{children}</main>
-        <footer>
-          <p>© 2024 My Website</p>
-        </footer>
+        <div style={{ display: 'flex', height: '100vh' }}>
+          {/* Sidebar */}
+          <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+          {/* Main Content */}
+          <div style={{ flex: 1, padding: '20px' }}>
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );
-}
-
-const headerStyle: React.CSSProperties = {
-  padding: '1px',
-  backgroundColor: '#ffff',
-  color: 'black',
-  textAlign: 'center',
 };
 
+export default Layout;

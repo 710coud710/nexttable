@@ -3,38 +3,39 @@ import { isMinValueInRange } from "./cellClassLogic";
 import { DataRow } from "./pagetype";
 
 export const columnDefs: ColDef<DataRow>[] = [
-    { headerName: "Year", field: "Year", filter: "agSetColumnFilter" },
-    { headerName: "Coin", field: "Coin", filter: "agSetColumnFilter" },
-    { headerName: "Container", field: "Container", filter: "agSetColumnFilter" },
-    { headerName: "Max", field: "Max" },
-    { headerName: "Leverage", field: "Leverage" },
-    { headerName: "Reserve", field: "Reserve" },
-    { headerName: "IR", field: "IR" },
-    { headerName: "Account Name", field: "Account Name" },
-    { headerName: "Status", field: "Status", filter: "agSetColumnFilter" },
+    { headerName: "year", field: "year", filter: "agSetColumnFilter" },
+    { headerName: "coin", field: "coin", filter: "agSetColumnFilter" },
+    // { headerName: "Max", field: "Max" },
+    { headerName: "leverage", field: "leverage" },
+    { headerName: "reserve", field: "reserve" },
+    { headerName: "ir", field: "ir" },
+    { headerName: "container", field: "container", filter: "agSetColumnFilter" },
+    { headerName: "rsi_wma_day", field: "rsi_wma_day" },
+    { headerName: "account_name", field: "account_name" },    
+    // { headerName: "Status", field: "Status", filter: "agSetColumnFilter" },
     {
-      headerName: "Final Equity",
-      field: "Final Equity",
+      headerName: "final_balance",
+      field: "final_balance",
       filter: "agNumberColumnFilter",
-      valueGetter: (params: ValueGetterParams) => {
-        const finalEquity = params.data["Final Equity"];
-        if (typeof finalEquity === "string") {
-          return parseFloat(finalEquity.replace(/[$,]/g, ""));
-        }
-        return finalEquity;
-      },
-      valueFormatter: (params: { value: number }) => {
-        if (params.value !== null && params.value !== undefined) {
-          return `$${params.value.toLocaleString()}`;
-        }
-        return "";
-      },
+      // valueGetter: (params: ValueGetterParams) => {
+      //   const finalEquity = params.data["final_balance"];
+      //   if (typeof finalEquity === "string") {
+      //     return parseFloat(finalEquity.replace(/[$,]/g, ""));
+      //   }
+      //   return finalEquity;
+      // },
+      // valueFormatter: (params: { value: number }) => {
+      //   if (params.value !== null && params.value !== undefined) {
+      //     return `$${params.value.toLocaleString()}`;
+      //   }
+      //   return "";
+      // },
     },
     {
-      headerName: "Max UPNL",
-      field: "Max UPNL",
+      headerName: "max_upnl",
+      field: "max_upnl",
       valueGetter: (params: ValueGetterParams) => {
-        const maxUpnl = params.data["Max UPNL"];
+        const maxUpnl = params.data["max_upnl"];
         if (typeof maxUpnl === "string") {
           //
           return parseFloat(maxUpnl.replace(/[%]/g, ""));
@@ -49,7 +50,7 @@ export const columnDefs: ColDef<DataRow>[] = [
         return "";
       },
     },    
-    { headerName: "Median Gain", field: "Median Gain" },
+    { headerName: "median_gain", field: "median_gain" },
       { headerName: "75% Gain", field: "75% Gain" },
       { headerName: "95% Gain", field: "95% Gain" },
       { headerName: "98% Gain", field: "98% Gain" },
@@ -111,7 +112,9 @@ export const columnDefs: ColDef<DataRow>[] = [
       { headerName: "95%", field: "95%", cellClassRules: {
         "min-value-cell": params => isMinValueInRange(params),
       }, },
-      { headerName: "R:R", field: "R:R" },
+      { headerName: "RR", field: "RR" },
+      { headerName: "alpha_ruin", field: "alpha_ruin" },
+      { headerName: "worst_ruin", field: "worst_ruin"},
       { headerName: "initial_risk", field: "initial_risk" },
       { headerName: "max_slots", field: "max_slots" },
       { headerName: "frame", field: "frame" },

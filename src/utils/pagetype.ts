@@ -46,5 +46,6 @@ export interface DataRow  {
     "max_slots": number;
     "phases": string;
     "rsi_wma_day": string;
+    "max_sizing": number;
    
   };

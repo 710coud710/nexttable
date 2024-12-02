@@ -6,22 +6,22 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
 import { IRowNode, GridApi, GridReadyEvent } from "ag-grid-community";
-import { columnDefs } from "../../columnDefs"; 
-import { DataRow } from "../../pagetype";
-
+import { columnDefs } from "../../../utils/columnDefs"; 
+import { DataRow } from "../../../utils/pagetype";
+import { useParams } from "next/navigation";
+import { fetchCollectionData } from "../../../api/fetchdata";
 // Interface cho Params
-interface Params {
-  collectionName: string;
-  name: string;
-}
+// type Props = {
+//   params: {
+//     name: string;
+//   };
+//   searchParams: { [key: string]: string | string[] | undefined };
+// };
 
-// Kiểu cho Props của ViewDataPage
-interface ViewDataPageProps {
-  params: Params;
-}
 
-const ViewDataPage: React.FC<ViewDataPageProps> = ({ params }) => {
-  const { collectionName, name } = params;
+const ViewDataPage = () => {
+  const params = useParams();
+  const name = params.name as string;
 
   const [data, setData] = useState<DataRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -35,21 +35,11 @@ const ViewDataPage: React.FC<ViewDataPageProps> = ({ params }) => {
   // Hàm fetch dữ liệu
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch("http://27.72.246.67:8710/api/data", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ collection_name: name }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setData(result.data || []);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Failed to fetch data");
-      }
+      setLoading(true);
+      const result = await fetchCollectionData(name);
+      setData(result.data);
     } catch (err) {
-      setError("Error fetching data");
+      setError(err instanceof Error ? err.message : "Error fetching data");
       console.error("Error:", err);
     } finally {
       setLoading(false);
@@ -59,7 +49,7 @@ const ViewDataPage: React.FC<ViewDataPageProps> = ({ params }) => {
   // Fetch dữ liệu khi collectionName hoặc name thay đổi
   useEffect(() => {
     fetchData();
-  }, [collectionName, name, fetchData]);
+  }, [name, fetchData]);
 
   // Sự kiện khi Grid đã sẵn sàng
   const onGridReady = (params: GridReadyEvent) => {
@@ -110,7 +100,7 @@ const ViewDataPage: React.FC<ViewDataPageProps> = ({ params }) => {
   return (
     <div className="container-fluid">
       <div style={{ marginBottom: "1rem", marginLeft: "16px" }}>
-        <h2>Collection: {collectionName}</h2>
+  
         <label>
           <span style={{ marginRight: "8px" }}> Final Equity ≥ </span>
           <input

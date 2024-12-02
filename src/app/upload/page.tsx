@@ -1,26 +1,24 @@
 'use client';
-
+import { uploadData } from '@/api/pushdata';
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 
 interface DataRow {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any; 
+  [key: string]: unknown;
 }
 
 const UploadPage = () => {
-  const [data, setData] = useState<DataRow[]>([]); // Lưu trữ dữ liệu đọc từ file
-  const [fileType, setFileType] = useState<string>(''); // Lưu kiểu file đã tải lên (XLSX/CSV)
+  const [data, setData] = useState<DataRow[]>([]);
+  const [fileType, setFileType] = useState<string>('');
+  const [fileName, setFileName] = useState<string>('');
 
   // Xử lý khi chọn file XLSX hoặc CSV
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Kiểm tra định dạng file
-      if (
-        file.name.endsWith('.xlsx') ||
-        file.name.endsWith('.csv')
-      ) {
+      setFileName(file.name);
+
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.csv')) {
         const reader = new FileReader();
 
         reader.onload = (event) => {
@@ -29,9 +27,9 @@ const UploadPage = () => {
           if (file.name.endsWith('.xlsx')) {
             // Đọc file XLSX
             const wb = XLSX.read(fileContent, { type: 'array' });
-            const ws = wb.Sheets[wb.SheetNames[0]]; // Lấy sheet đầu tiên
-            const jsonData = XLSX.utils.sheet_to_json(ws); // Chuyển Sheet thành JSON
-            setData(jsonData as DataRow[]); // Lưu dữ liệu vào state
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(ws);
+            setData(jsonData as DataRow[]);
             setFileType('xlsx');
             console.log('Data from XLSX:', jsonData);
           } else if (file.name.endsWith('.csv')) {
@@ -45,11 +43,10 @@ const UploadPage = () => {
           }
         };
 
-        // Đọc file
         if (file.name.endsWith('.xlsx')) {
-          reader.readAsArrayBuffer(file); // Đọc file XLSX
+          reader.readAsArrayBuffer(file);
         } else {
-          reader.readAsBinaryString(file); // Đọc file CSV
+          reader.readAsBinaryString(file);
         }
       } else {
         alert('Please upload a valid XLSX or CSV file!');
@@ -59,21 +56,14 @@ const UploadPage = () => {
 
   const handleSubmit = async () => {
     try {
-      console.log('Data API:', data);
-
-      const response = await fetch('http://127.0.0.1:8710/api/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        alert('Data saved successfully!');
-      } else {
-        alert('Error saving data');
-      }
+      const payload = {
+        data: data,
+        fileName: fileName
+      };
+      const result = await uploadData(payload);
+      alert(result.message);
+      console.log(fileName);
+      console.log(data);
     } catch (error) {
       alert('Error: ' + error);
     }
@@ -97,6 +87,7 @@ const UploadPage = () => {
         {fileType && (
           <div>
             <p>{fileType === 'csv' ? 'CSV file selected' : 'XLSX file selected'}</p>
+            <p>File name: {fileName}</p>
           </div>
         )}
         <button onClick={handleSubmit} style={{ marginTop: '20px' }}>

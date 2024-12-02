@@ -1,17 +1,25 @@
 // src/api/collections.ts
-
+import { getApiUrl, API_ENDPOINTS } from './apiConfig';
 // Hàm lấy danh sách collections
+
+interface CollectionData {
+  timestamp: string;
+  name: string;
+  collection_name: string;
+}
+
 export const fetchCollections = async () => {
     try {
-      const response = await fetch('http://27.72.246.67:8710/api/collections'); // Endpoint API
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COLLECTION));
       const data = await response.json();
   
       if (data.status === 'success') {
         const formattedCollections = data.collections.map(
-          (name: string, index: number) => ({
+          (collection: CollectionData, index: number) => ({
             id: index + 1,
-            name,
-            time: new Date().toLocaleString(), // Tạm dùng thời gian hiện tại
+            name: collection.name,           // Tên file
+            time: collection.timestamp,      // Timestamp
+            collection_name: collection.collection_name  // Tên collection đầy đủ
           })
         );
         return formattedCollections;
@@ -27,7 +35,7 @@ export const fetchCollections = async () => {
   // Hàm xóa collection
   export const deleteCollection = async (name: string) => {
     try {
-      const response = await fetch('http://27.72.246.67:8710/api/delete', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.DELETE), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

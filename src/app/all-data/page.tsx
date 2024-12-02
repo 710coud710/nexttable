@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { fetchCollections, deleteCollection } from '@/api/collection'; // Import các hàm API
+import Link from 'next/link';
 
 interface Collection {
   id: number;
   name: string;
   time: string;
+  collection_name: string;
 }
 
 const CollectionsPage: React.FC = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const router = useRouter();
+  // const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,7 +36,7 @@ const CollectionsPage: React.FC = () => {
 
       if (success) {
         alert(message);
-        // Cập nhật lại danh sách sau khi xóa
+        // update lại dS sau khi xóa
         setCollections((prevCollections) =>
           prevCollections.filter((collection) => collection.name !== name)
         );
@@ -47,16 +49,14 @@ const CollectionsPage: React.FC = () => {
     }
   };
 
-  const handleView = (name: string) => {
-    router.push(`/all-data/${name}`);
-  };
+  // const handleView = (name: string) => {
+  //   router.push(`/all-data/${name}`);
+  // };
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <h1>Collections</h1>
-      <table
-        style={styles.table}
-      >
+      <table style={styles.table}>
         <thead>
           <tr style={styles.headerRow}>
             <th style={styles.headerCell}>STT</th>
@@ -67,15 +67,25 @@ const CollectionsPage: React.FC = () => {
         </thead>
         <tbody>
           {collections.map((collection) => (
-            <tr key={collection.id } style={styles.bodyRow}>
+            <tr key={collection.id} style={styles.bodyRow}>
               <td style={styles.bodyCell}>{collection.id}</td>
               <td style={styles.bodyCell}>{collection.name}</td>
-              <td style={styles.bodyCell}>{collection.time}</td>
+              <td style={styles.bodyCell}>
+                {collection.time.replace('_', ' ')}
+              </td>
               <td>
-                <button onClick={() => handleView(collection.name)} style={styles.viewButton}>
+                <Link 
+                  href={`/all-data/${collection.collection_name}`}
+                  style={styles.viewButton}
+                >
                   View
+                </Link>
+                <button 
+                  onClick={() => handleDelete(collection.collection_name)} 
+                  style={styles.deleteButton}
+                >
+                  Delete
                 </button>
-                <button onClick={() => handleDelete(collection.name)} style={styles.De}>Delete</button>
               </td>
             </tr>
           ))}
@@ -128,10 +138,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     transition: 'background-color 0.3s ease',
   },
-  bodyRowHover: {
-    backgroundColor: '#f1f1f1',
-  },
 };
-
 
 export default CollectionsPage;

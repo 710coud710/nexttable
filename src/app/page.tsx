@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState,  useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
-import { IRowNode, GridApi, GridReadyEvent } from "ag-grid-community";
+import {  GridApi, GridReadyEvent } from "ag-grid-community";
 import { fetchData } from "@/api/fetchdata";
-import { columnDefs } from "./columnDefs";
-
-
-import { DataRow } from "./pagetype";
+import { columnDefs } from "../utils/columnDefs";
+import { DEFAULT_COL_DEF, GRID_CONFIG, GRID_FEATURES } from "../utils/gridConstants";
+import { DataRow } from "../utils/pagetype";
+import {  createExternalFilterFunctions } from "../utils/filterUtils";
 
 const DataTable: React.FC = () => {
   const [data, setData] = useState<DataRow[]>([]);
@@ -43,10 +43,8 @@ const DataTable: React.FC = () => {
     gridApiRef.current = params.api;
     setResultCount(params.api.getDisplayedRowCount()); 
     // Auto-size all columns
-    params.api.sizeColumnsToFit(); // Automatically adjust columns to fit grid size
+    params.api.sizeColumnsToFit(); 
   };
-
-
 
   const onFilterChanged = () => {
     if (gridApiRef.current) {
@@ -54,44 +52,19 @@ const DataTable: React.FC = () => {
     }
   };
 
-  const defaultColDef = useMemo(
-    () => ({
-      filter: true,
-      sortable: true,
-      resizable: true,
-    }),
-    []
-  );
-
-  //filter lọc các giá trị 
-  const isExternalFilterPresent = () => {
-    return filterEnabled; 
-  };
-
-  const doesExternalFilterPass = (node: IRowNode) => {
-    if (!filterEnabled) return true; 
-    const finalEquity = node.data["fina_balance"];
-    const equityValue =
-      typeof finalEquity === "string"
-        ? parseFloat(finalEquity.replace(/[$,]/g, "")) || 0
-        : finalEquity || 0;
-
-    const maxUpnl = node.data["max_upnl"];
-    const upnlValue =
-      typeof maxUpnl === "string"
-        ? parseFloat(maxUpnl.replace(/[%]/g, "").replace(/,/g, "")) || 0
-        : maxUpnl || 0;
-    
-    return equityValue >= minEquity && upnlValue >= minUpnl;
-  };
-
   const toggleFilter = () => {
     setFilterEnabled((prev) => !prev);
   };
+
+  const { isExternalFilterPresent, doesExternalFilterPass } = createExternalFilterFunctions(
+    filterEnabled,
+    minEquity as number,
+    Number(minUpnl)
+  );
   
   
-  if (loading) return <p>Loading data...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <p style={{fontSize: '20px', color: 'red', textAlign: 'center', padding: '50px'}}>Loading data...</p>;
+  if (error) return <p style={{fontSize: '20px', color: 'red', textAlign: 'center', padding: '50px'}}>{error}</p>;
 
   return (
     <div className="container-fluid">
@@ -139,24 +112,15 @@ const DataTable: React.FC = () => {
       <div style={{ marginBottom: "1rem", marginLeft: "16px" }}>
         <strong>Total Results: {resultCount}</strong>
       </div>
-      {/* {filterEnabled && (
-        <span style={{ marginLeft: "16px" ,fontSize: "22px"}}>
-           results found: {resultCount}
-        </span>
-      )} */}
-      
       <div className="ag-theme-alpine" style={{ height: "100%", width: "100%" }}>
         <AgGridReact<DataRow>
           columnDefs={columnDefs}
           rowData={data}
-          defaultColDef={defaultColDef}
-          enableRangeSelection={true}
-          enableCharts={true}
-          pagination={true}
-          paginationPageSize={20}
-          domLayout="autoHeight"
-          cacheBlockSize={20}
-          rowSelection="multiple"
+          defaultColDef={DEFAULT_COL_DEF}
+          paginationPageSize={GRID_CONFIG.PAGINATION_PAGE_SIZE}
+          cacheBlockSize={GRID_CONFIG.CACHE_BLOCK_SIZE}
+          {...GRID_FEATURES}
+
           isExternalFilterPresent={isExternalFilterPresent}
           doesExternalFilterPass={doesExternalFilterPass}
           onGridReady={onGridReady}

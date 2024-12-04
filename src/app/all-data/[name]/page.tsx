@@ -1,23 +1,17 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, { useEffect, useState,  useRef, useCallback } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
-import { IRowNode, GridApi, GridReadyEvent } from "ag-grid-community";
+import {  GridApi, GridReadyEvent } from "ag-grid-community";
 import { columnDefs } from "../../../utils/columnDefs"; 
 import { DataRow } from "../../../utils/pagetype";
 import { useParams } from "next/navigation";
 import { fetchCollectionData } from "../../../api/fetchdata";
-// Interface cho Params
-// type Props = {
-//   params: {
-//     name: string;
-//   };
-//   searchParams: { [key: string]: string | string[] | undefined };
-// };
-
+import { createExternalFilterFunctions } from "../../../utils/filterUtils";
+import { DEFAULT_COL_DEF, GRID_CONFIG, GRID_FEATURES } from "../../../utils/gridConstants";
 
 const ViewDataPage = () => {
   const params = useParams();
@@ -51,7 +45,7 @@ const ViewDataPage = () => {
     fetchData();
   }, [name, fetchData]);
 
-  // Sự kiện khi Grid đã sẵn sàng
+
   const onGridReady = (params: GridReadyEvent) => {
     gridApiRef.current = params.api;
     setResultCount(params.api.getDisplayedRowCount());
@@ -65,35 +59,16 @@ const ViewDataPage = () => {
     }
   };
 
-  // Default column definition cho AgGrid
-  const defaultColDef = useMemo(() => ({
-    filter: true,
-    sortable: true,
-    resizable: true,
-  }), []);
+  const { isExternalFilterPresent, doesExternalFilterPass } = createExternalFilterFunctions(
+    filterEnabled,
+    minEquity as number,
+    Number(minUpnl)
+  );
 
-  // Kiểm tra có bộ lọc ngoài hay không
-  const isExternalFilterPresent = () => filterEnabled;
-
-  // Hàm kiểm tra bộ lọc ngoài
-  const doesExternalFilterPass = (node: IRowNode) => {
-    if (!filterEnabled) return true;
-
-    const finalEquity = node.data["fina_balance"];
-    const equityValue = typeof finalEquity === "string"
-      ? parseFloat(finalEquity.replace(/[$,]/g, "")) || 0
-      : finalEquity || 0;
-
-    const maxUpnl = node.data["max_upnl"];
-    const upnlValue = typeof maxUpnl === "string"
-      ? parseFloat(maxUpnl.replace(/[%]/g, "").replace(/,/g, "")) || 0
-      : maxUpnl || 0;
-
-    return equityValue >= minEquity && upnlValue >= minUpnl;
-  };
 
   // Toggle bộ lọc
   const toggleFilter = () => setFilterEnabled((prev) => !prev);
+
 
   if (loading) return <p>Loading data...</p>;
   if (error) return <p>{error}</p>;
@@ -147,13 +122,11 @@ const ViewDataPage = () => {
         <AgGridReact<DataRow>
           columnDefs={columnDefs}
           rowData={data}
-          defaultColDef={defaultColDef}
-          enableRangeSelection={true}
-          enableCharts={true}
-          pagination={true}
-          paginationPageSize={20}
+          defaultColDef={DEFAULT_COL_DEF}
+          cacheBlockSize={GRID_CONFIG.CACHE_BLOCK_SIZE}
+          {...GRID_FEATURES}
+          paginationPageSize={GRID_CONFIG.PAGINATION_PAGE_SIZE}
           domLayout="autoHeight"
-          cacheBlockSize={20}
           rowSelection="multiple"
           isExternalFilterPresent={isExternalFilterPresent}
           doesExternalFilterPass={doesExternalFilterPass}
